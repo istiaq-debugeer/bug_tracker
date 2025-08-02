@@ -6,12 +6,21 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
-
+from rest_framework import status
 
 from .models import Project, Bug, Comment
-from .serializers import ProjectSerializer, BugSerializer, CommentSerializer
-from .utils import notify_project
+from .serializers import ProjectSerializer, BugSerializer, CommentSerializer, UserRegisterSerializer
+from .utils import log_and_notify, notify_project
 
+
+class RegisterUserView(APIView):
+    def post(self, request):
+        serializer = UserRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
@@ -45,6 +54,14 @@ class BugViewSet(viewsets.ModelViewSet):
             },
         )
 
+        log_and_notify(
+            project_id=bug.project.id,
+            user=self.request.user,
+            event="bug_created",
+            bug=bug,
+            message=f"Bug created: {bug.title}",
+        )
+
     def perform_update(self, serializer):
         bug = serializer.save()
         notify_project(
@@ -57,6 +74,14 @@ class BugViewSet(viewsets.ModelViewSet):
             },
         )
 
+        log_and_notify(
+            project_id=bug.project.id,
+            user=self.request.user,
+            event="bug_updated",
+            bug=bug,
+            message=f"Bug updated: {bug.title}",
+        )
+
 
 class ListBugsApiview(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -64,7 +89,7 @@ class ListBugsApiview(APIView):
     def get(self, request, **kwargs):
         user_id = kwargs.get("user_id")
         query = (
-            Bug.objects.filter(assigned_to=request.user)
+            Bug.objects.filter(assigned_to=user_id)
             .select_related("assigned_to", "project", "created_by")
             .all()
         )
@@ -102,4 +127,12 @@ class CommentViewSet(viewsets.ModelViewSet):
                 "title": comment.message,
                 "status": comment.bug.status,
             },
+        )
+
+        log_and_notify(
+            project_id=comment.bug.project.id,
+            user=self.request.user,
+            event="comment_added",
+            bug=comment.bug,
+            message=f"New comment: {comment.message}",
         )
