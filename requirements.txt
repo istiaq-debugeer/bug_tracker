@@ -1,0 +1,19 @@
+asgiref==3.9.1
+attrs==25.3.0
+daphne==4.2.1
+Django==5.2.4
+# django-channels==0.7.0
+channels==4.0.0
+django-filter==25.1
+djangorestframework==3.16.0
+djangorestframework_simplejwt==5.5.1
+drf-yasg==1.21.10
+requests==2.32.4
+requests-oauthlib==2.0.0
+service-identity==24.2.0
+setuptools==80.9.0
+six==1.17.0
+sqlparse==0.5.3
+typing_extensions==4.14.1
+uritemplate==4.2.0
+urllib3==2.5.0

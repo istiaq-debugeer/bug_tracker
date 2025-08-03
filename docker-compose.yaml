@@ -1,0 +1,31 @@
+services:
+  web:
+    build: .
+    working_dir: /src
+    volumes:
+      - ./src:/src
+    command: daphne bug_tracker.asgi:application -b 0.0.0.0 -p 8000
+    environment:
+      DJANGO_SETTINGS_MODULE: bug_tracker.settings
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      # - db  # Uncomment this if using Postgres
+      []
+
+    # Uncomment the db section below if you want to use PostgreSQL
+    # db:
+    #   image: postgres:15
+    #   environment:
+    #     POSTGRES_DB: bugtracker
+    #     POSTGRES_USER: buguser
+    #     POSTGRES_PASSWORD: bugpassword
+    #   volumes:
+    #     - postgres_data:/var/lib/postgresql/data/
+    #   ports:
+    #     - "5432:5432"
+
+  # Uncomment to enable persistent database storage
+  # volumes:
+  #   postgres_data:
